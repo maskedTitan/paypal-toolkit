@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PayPal Agent AI Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-8">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full space-y-6">
+        <h1 class="text-3xl font-bold text-center text-blue-600">PayPal Agent AI Demo</h1>
+    
+        <!-- Prompt Textarea -->
+        <textarea id="prompt" class="w-full p-4 border rounded focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Type your prompt..."></textarea>
+    
+        <!-- Mode Dropdown + Generate Button -->
+        <div class="flex gap-4">
+          <select id="mode" class="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-400">
+            <option value="workflow">Workflow</option>
+            <option value="toolkit">Toolkit</option>
+          </select>
+    
+          <button id="generate" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+            Generate
+          </button>
+        </div>
+    
+        <!-- Results Section -->
+        <div class="space-y-6">
+    
+          <!-- Prompt Sent -->
+          <div>
+            <h2 class="text-lg font-semibold mb-2 text-gray-700">📝 Prompt Sent</h2>
+            <pre id="promptSent" class="bg-gray-100 p-4 rounded whitespace-pre-wrap text-sm"></pre>
+          </div>
+    
+          <!-- Raw Request Payload -->
+          <div>
+            <h2 class="text-lg font-semibold mb-2 text-gray-700">📤 Raw Request Payload</h2>
+            <pre id="requestPayload" class="bg-gray-100 p-4 rounded whitespace-pre-wrap text-sm"></pre>
+          </div>
+    
+          <!-- Raw Response Payload -->
+          <div>
+            <h2 class="text-lg font-semibold mb-2 text-gray-700">📥 Raw Response Payload</h2>
+            <pre id="responsePayload" class="bg-gray-100 p-4 rounded whitespace-pre-wrap text-sm"></pre>
+          </div>
+    
+        </div>
+      </div>
+
+  <script>
+    function syntaxHighlight(json) {
+      if (typeof json != 'string') {
+        json = JSON.stringify(json, undefined, 2);
+      }
+      json = json
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+          let cls = 'text-sky-600'; // default color
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = 'text-purple-600'; // key
+            } else {
+              cls = 'text-green-600'; // string
+            }
+          } else if (/true|false/.test(match)) {
+            cls = 'text-orange-500'; // boolean
+          } else if (/null/.test(match)) {
+            cls = 'text-gray-500'; // null
+          } else {
+            cls = 'text-red-600'; // number
+          }
+          return `<span class="${cls}">${match}</span>`;
+        });
+      return json;
+    }
+  
+    const generateBtn = document.getElementById('generate');
+    const promptInput = document.getElementById('prompt');
+    const modeSelect = document.getElementById('mode');
+    const promptSentDiv = document.getElementById('promptSent');
+    const requestPayloadDiv = document.getElementById('requestPayload');
+    const responsePayloadDiv = document.getElementById('responsePayload');
+  
+    generateBtn.addEventListener('click', async () => {
+  const prompt = promptInput.value.trim();
+  const mode = modeSelect.value;
+
+  if (!prompt) {
+    alert('Please enter a prompt!');
+    return;
+  }
+
+  promptSentDiv.textContent = 'Loading...';
+  requestPayloadDiv.textContent = '';
+  responsePayloadDiv.textContent = '';
+
+  try {
+    const response = await fetch('http://localhost:3000/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, mode })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      promptSentDiv.textContent = data.prompt;
+      requestPayloadDiv.textContent = JSON.stringify(data.rawRequest, null, 2);
+      responsePayloadDiv.textContent = JSON.stringify(data.rawResponse, null, 2);
+      responsePayloadDiv.innerHTML = marked.parse(data.rawResponse);
+    } else {
+      promptSentDiv.textContent = 'Error generating result.';
+    }
+  } catch (error) {
+    console.error(error);
+    promptSentDiv.textContent = 'Server error. Please try again.';
+  }
+});
+  </script>  
+</body>
+</html>
