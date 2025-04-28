@@ -114,6 +114,12 @@ app.post('/generate', async (req, res) => {
 
 app.use(express.static('public'));
 
+// Serve root (/) - Load public/index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+  });
+
+// Serve /thank-you
 app.get('/thank-you', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/thank-you.html'));
   });
