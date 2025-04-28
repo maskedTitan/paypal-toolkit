@@ -88,7 +88,7 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
   app.use(protect);
 
 app.post('/generate', async (req, res) => {
-    const { prompt, mode } = req.body;
+    const { prompt, mode, selectedActions = {} } = req.body;
   
     try {
       if (mode === 'workflow') {
@@ -105,11 +105,22 @@ app.post('/generate', async (req, res) => {
           rawResponse: orderSummary
         });
   
-      } else {
+      } else if(mode === 'toolkit') {
+        // 🛠 Dynamically create a new Toolkit based on selectedActions
+      const dynamicToolkitConfig = {
+        clientId: process.env.PAYPAL_CLIENT_ID || '',
+        clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
+        configuration: {
+          actions: selectedActions
+        }
+      };
+
+      const dynamicToolkit = new PayPalAgentToolkit(dynamicToolkitConfig);
+
         const { text: orderDetails } = await generateText({
           model: openai('gpt-4o'),
           prompt,
-          tools: paypalToolkit.getTools(),
+          tools: dynamicToolkit.getTools(),
           maxSteps: 10,
         });
   
@@ -118,10 +129,13 @@ app.post('/generate', async (req, res) => {
           prompt,
           rawRequest: {
             type: 'toolkit',
-            prompt
+            prompt,
+            selectedActions
           },
           rawResponse: orderDetails
         });
+      } else {
+        res.status(400).json({ success: false, message: 'Invalid mode selected' });
       }
   
     } catch (error) {

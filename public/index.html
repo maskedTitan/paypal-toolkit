@@ -8,7 +8,62 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-8">
     <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full space-y-6">
-        <h1 class="text-3xl font-bold text-center text-blue-600">PayPal Agent AI Demo</h1>      
+        <h1 class="text-3xl font-bold text-center text-blue-600">PayPal Agent AI Demo</h1>  
+        
+        <div class="space-y-6">
+          <h2 class="text-xl font-bold text-gray-800">Select Actions to Allow</h2>
+        
+          <div id="actionGrid" class="grid grid-cols-2 gap-6 text-gray-700">
+            <!-- Invoices -->
+            <div>
+              <h3 class="font-semibold">Invoices</h3>
+              <div><input type="checkbox" id="invoices-create"> Create</div>
+              <div><input type="checkbox" id="invoices-list"> List</div>
+              <div><input type="checkbox" id="invoices-send"> Send</div>
+              <div><input type="checkbox" id="invoices-sendReminder"> Send Reminder</div>
+              <div><input type="checkbox" id="invoices-cancel"> Cancel</div>
+              <div><input type="checkbox" id="invoices-generateQRC"> Generate QR</div>
+            </div>
+        
+            <!-- Orders -->
+            <div>
+              <h3 class="font-semibold">Orders</h3>
+              <div><input type="checkbox" id="orders-create"> Create</div>
+              <div><input type="checkbox" id="orders-get"> Get</div>
+            </div>
+        
+            <!-- Products -->
+            <div>
+              <h3 class="font-semibold">Products</h3>
+              <div><input type="checkbox" id="products-create"> Create</div>
+              <div><input type="checkbox" id="products-list"> List</div>
+              <div><input type="checkbox" id="products-update"> Update</div>
+            </div>
+        
+            <!-- Subscription Plans -->
+            <div>
+              <h3 class="font-semibold">Subscription Plans</h3>
+              <div><input type="checkbox" id="subscriptionPlans-create"> Create</div>
+              <div><input type="checkbox" id="subscriptionPlans-list"> List</div>
+              <div><input type="checkbox" id="subscriptionPlans-show"> Show</div>
+            </div>
+        
+            <!-- Shipment -->
+            <div>
+              <h3 class="font-semibold">Shipment</h3>
+              <div><input type="checkbox" id="shipment-create"> Create</div>
+              <div><input type="checkbox" id="shipment-show"> Show</div>
+              <div><input type="checkbox" id="shipment-cancel"> Cancel</div>
+            </div>
+        
+            <!-- Disputes -->
+            <div>
+              <h3 class="font-semibold">Disputes</h3>
+              <div><input type="checkbox" id="disputes-list"> List</div>
+              <div><input type="checkbox" id="disputes-get"> Get</div>
+            </div>
+          </div>
+        </div>        
     
         <!-- Prompt Textarea -->
         <textarea id="prompt" class="w-full p-4 border rounded focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Type your prompt..."></textarea>
@@ -75,6 +130,27 @@
         });
       return json;
     }
+
+    function collectSelectedActions() {
+      const sections = ['invoices', 'orders', 'products', 'subscriptionPlans', 'shipment', 'disputes'];
+      const actions = {};
+
+  sections.forEach(section => {
+    const checkboxes = document.querySelectorAll(`input[id^="${section}-"]`);
+    checkboxes.forEach(checkbox => {
+      const action = checkbox.id.split('-')[1];
+      if (checkbox.checked) {
+        if (!actions[section]) {
+          actions[section] = {};
+        }
+        actions[section][action] = true;
+      }
+    });
+  });
+
+  return actions;
+}
+
   
     const generateBtn = document.getElementById('generate');
     const promptInput = document.getElementById('prompt');
@@ -97,10 +173,11 @@
   responsePayloadDiv.textContent = '';
 
   try {
+    const selectedActions = collectSelectedActions();
     const response = await fetch('/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, mode })
+      body: JSON.stringify({ prompt, mode, selectedActions })
     });
 
     const data = await response.json();
