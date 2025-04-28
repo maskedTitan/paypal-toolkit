@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { PayPalWorkflows, PayPalAgentToolkit, ALL_TOOLS_ENABLED } from '@paypal/agent-toolkit/ai-sdk';
@@ -20,7 +21,7 @@ const openai = createOpenAI({
 });
 
 // Setup PayPal toolkit and workflows
-const ppConfig = {
+const ppConfigWorkflows = {
   clientId: process.env.PAYPAL_CLIENT_ID || '',
   clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
   configuration: {
@@ -28,10 +29,34 @@ const ppConfig = {
   }
 };
 
-const paypalToolkit = new PayPalAgentToolkit(ppConfig);
-const paypalWorkflows = new PayPalWorkflows(ppConfig);
+const ppConfigToolkit =  {
+    clientId: process.env.PAYPAL_CLIENT_ID || '',
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
+    configuration: {
+      actions: {
+        invoices: {
+          create: true,
+          list: true,
+          send: true,
+          sendReminder: true,
+          cancel: true,
+          generateQRC: true,
+        },
+        products: { create: true, list: true, update: true },
+        subscriptionPlans: { create: true, list: true, show: true },
+        shipment: { create: true, show: true, cancel: true },
+        orders: { create: true, get: true },
+        disputes: { list: true, get: true },
+      },
+    },
+  };
+
+const paypalToolkit = new PayPalAgentToolkit(ppConfigToolkit);
+const paypalWorkflows = new PayPalWorkflows(ppConfigWorkflows);
 
 // System prompt
+// This prompt defines the business assistant's behavior when interacting with PayPal APIs.
+// It ensures that the AI agent creates fully detailed and payment-ready PayPal orders based on user input.
 const systemPrompt = `
 You are an intelligent business assistant specializing in generating accurate PayPal orders based on user requests.
 When creating orders:
@@ -88,6 +113,10 @@ app.post('/generate', async (req, res) => {
   });  
 
 app.use(express.static('public'));
+
+app.get('/thank-you', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/thank-you.html'));
+  });
 
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}`);
