@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-green-50 flex items-center justify-center min-h-screen p-6">
+  <div class="bg-white p-8 rounded-2xl shadow-lg text-center space-y-6">
+    <h1 class="text-4xl font-bold text-green-600">🎉 Payment Successful!</h1>
+    <p id="orderMessage" class="text-lg text-gray-700">Thank you for your purchase.</p>
+    <a href="/" class="inline-block mt-6 px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700">Return Home</a>
+  </div>
+
+  <script>
+    // Parse query parameters
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('token');
+    const payerId = params.get('PayerID');
+
+    if (orderId) {
+      document.getElementById('orderMessage').innerHTML = `
+        <strong>Order ID:</strong> ${orderId} <br>
+        <strong>Payer ID:</strong> ${payerId || 'N/A'}
+      `;
+    }
+  </script>
+</body>
+</html>
