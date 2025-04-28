@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import auth from 'basic-auth';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { PayPalWorkflows, PayPalAgentToolkit, ALL_TOOLS_ENABLED } from '@paypal/agent-toolkit/ai-sdk';
@@ -70,6 +71,21 @@ When creating orders:
 - Set the return URL to: ${BASE_URL}/thank-you.
 Always generate complete, detailed, and payment-ready order information.
 `;
+
+const protect = (req: Request, res: Response, next: NextFunction) => {
+    const credentials = auth(req);
+  
+    if (!credentials || credentials.name !== process.env.PROTECT_USER || credentials.pass !== process.env.PROTECT_PASS) {
+      res.statusCode = 401;
+      res.setHeader('WWW-Authenticate', 'Basic realm="Access to the site"');
+      res.end('Access denied');
+    } else {
+      next();
+    }
+  };
+  
+  // Apply protection to all routes
+  app.use(protect);
 
 app.post('/generate', async (req, res) => {
     const { prompt, mode } = req.body;
