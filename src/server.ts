@@ -54,6 +54,8 @@ const ppConfigToolkit =  {
 const paypalToolkit = new PayPalAgentToolkit(ppConfigToolkit);
 const paypalWorkflows = new PayPalWorkflows(ppConfigWorkflows);
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+
 // System prompt
 // This prompt defines the business assistant's behavior when interacting with PayPal APIs.
 // It ensures that the AI agent creates fully detailed and payment-ready PayPal orders based on user input.
@@ -65,7 +67,7 @@ When creating orders:
 - Include service descriptions, quantities, unit prices, and total amounts.
 - If shipping or discounts are involved, itemize them separately.
 - Use USD currency unless otherwise specified.
-- Set the return URL to: http://localhost:3000/thank-you.
+- Set the return URL to: ${BASE_URL}/thank-you.
 Always generate complete, detailed, and payment-ready order information.
 `;
 
