@@ -12,9 +12,14 @@ A fullstack demo app that lets you create PayPal orders using natural language p
    - PAYPAL_CLIENT_SECRET
 4. Run backend:
    npm run dev
-6. Open `public/index.html` in browser
+6. Open localhost:3000 in browser
 
 ## Features
 - Workflow mode (smart order creation)
 - Toolkit mode (manual order building)
 - Pretty UI with Tailwind CSS
+
+## Examples
+- Workflow : "Create a $50 PayPal order for a faucet installation service."
+- Toolkit : "Create a PayPal order for 1 Premium Faucet at $120. Apply 12% tax. No shipping cost. Deliver to 123 Main Street, New York, NY 10001, USA."
+
