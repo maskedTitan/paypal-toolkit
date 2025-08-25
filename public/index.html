@@ -149,6 +149,14 @@
         const data = await response.json();
         currentMode = data.mode;
         updateUI(currentMode);
+        
+        // Hide toggle in production demo deployments
+        if (data.mode === 'demo' && window.location.hostname.includes('vercel.app')) {
+          const toggleContainer = document.querySelector('.flex.items-center.space-x-4.bg-gray-50');
+          if (toggleContainer) {
+            toggleContainer.style.display = 'none';
+          }
+        }
       } catch (error) {
         console.log('Could not check demo mode status');
       }

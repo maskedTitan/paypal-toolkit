@@ -195,8 +195,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 🔄 MODE TOGGLE ENDPOINT
+// 🔄 MODE TOGGLE ENDPOINT (disabled in production demo deployments)
 app.post('/toggle-mode', (req, res) => {
+  // Security: Disable toggle in production demo deployments
+  if (process.env.NODE_ENV === 'production' && process.env.DEMO_MODE === 'true') {
+    res.status(403).json({
+      success: false,
+      message: 'Mode switching is disabled in demo deployments for security reasons'
+    });
+    return;
+  }
+
   const { mode } = req.body;
   
   if (mode === 'demo' || mode === 'production') {
