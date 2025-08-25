@@ -16,8 +16,9 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-// 🎭 DEMO MODE FLAG (can be changed dynamically)
-let DEMO_MODE = process.env.DEMO_MODE === 'true';
+// 🎭 DEMO MODE FLAG (hardcoded for demo branch)
+const IS_DEMO_BRANCH = process.env.VERCEL_GIT_COMMIT_REF === 'demo-v1';
+let DEMO_MODE = IS_DEMO_BRANCH ? true : (process.env.DEMO_MODE === 'true');
 
 // 🎪 MOCK RESPONSE GENERATOR
 const generateMockResponse = (prompt: string, mode: string): any => {
@@ -180,13 +181,14 @@ app.use('/generate', protect);
 
 // 🚀 HEALTH/INFO ENDPOINT
 app.get('/health', (req, res) => {
-  const isLockedDemo = process.env.VERCEL === '1' && process.env.DEMO_MODE === 'true';
+  const isLockedDemo = IS_DEMO_BRANCH || (process.env.VERCEL === '1' && process.env.DEMO_MODE === 'true');
   
   res.json({
     success: true,
     status: 'healthy',
     mode: DEMO_MODE ? 'demo' : 'production',
     isLockedDemo, // Add this flag for frontend
+    branch: process.env.VERCEL_GIT_COMMIT_REF || 'local',
     timestamp: new Date().toISOString(),
     ...(DEMO_MODE && {
       demoInfo: {
@@ -200,12 +202,11 @@ app.get('/health', (req, res) => {
 
 // 🔄 MODE TOGGLE ENDPOINT (disabled in production demo deployments)
 app.post('/toggle-mode', (req, res) => {
-  // Security: Disable toggle in production demo deployments
-  const isLockedDemo = process.env.VERCEL === '1' && process.env.DEMO_MODE === 'true';
-  if (isLockedDemo) {
+  // Security: Disable toggle in demo branch deployments
+  if (IS_DEMO_BRANCH) {
     res.status(403).json({
       success: false,
-      message: 'Mode switching is disabled in demo deployments for security reasons'
+      message: 'Mode switching is permanently disabled in demo branch deployments for security reasons'
     });
     return;
   }

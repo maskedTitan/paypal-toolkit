@@ -24,6 +24,22 @@
           </div>
         </div>
         
+        <!-- Locked Demo Banner (for branch deployments) -->
+        <div id="lockedDemoBanner" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">🔒</span>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm">
+                <strong>Permanent Demo Environment:</strong> This deployment is locked in demo mode for security. 
+                Only mock responses are returned - perfect for testing and documentation.
+                <a href="/demo-info" class="underline ml-2">Learn more</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <div class="flex justify-between items-center">
           <h1 id="mainTitle" class="text-3xl font-bold text-blue-600">PayPal Agent AI</h1>  
           
@@ -150,12 +166,17 @@
         currentMode = data.mode;
         updateUI(currentMode);
         
-        // Hide toggle in locked demo deployments
-        if (data.isLockedDemo) {
+        // Show appropriate banner and hide toggle for locked demos
+        if (data.isLockedDemo && data.branch === 'demo-v1') {
+          // Show locked demo banner for branch deployments
+          document.getElementById('lockedDemoBanner').classList.remove('hidden');
           const toggleContainer = document.querySelector('.flex.items-center.space-x-4.bg-gray-50');
           if (toggleContainer) {
             toggleContainer.style.display = 'none';
           }
+        } else if (data.mode === 'demo') {
+          // Show regular demo banner for toggleable demos
+          document.getElementById('demoBanner').classList.remove('hidden');
         }
       } catch (error) {
         console.log('Could not check demo mode status');
