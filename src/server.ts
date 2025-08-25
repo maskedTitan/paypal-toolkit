@@ -16,8 +16,8 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-// 🎭 DEMO MODE FLAG
-const DEMO_MODE = process.env.DEMO_MODE === 'true';
+// 🎭 DEMO MODE FLAG (can be changed dynamically)
+let DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 // 🎪 MOCK RESPONSE GENERATOR
 const generateMockResponse = (prompt: string, mode: string): any => {
@@ -195,6 +195,27 @@ app.get('/health', (req, res) => {
   });
 });
 
+// 🔄 MODE TOGGLE ENDPOINT
+app.post('/toggle-mode', (req, res) => {
+  const { mode } = req.body;
+  
+  if (mode === 'demo' || mode === 'production') {
+    DEMO_MODE = mode === 'demo';
+    console.log(`🔄 Mode switched to: ${DEMO_MODE ? 'DEMO' : 'PRODUCTION'}`);
+    
+    res.json({
+      success: true,
+      mode: DEMO_MODE ? 'demo' : 'production',
+      message: `Switched to ${DEMO_MODE ? 'demo' : 'production'} mode`
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      message: 'Invalid mode. Use "demo" or "production"'
+    });
+  }
+});
+
 // 📊 DEMO INFO ENDPOINT (only available in demo mode)
 if (DEMO_MODE) {
   app.get('/demo-info', (req, res) => {
@@ -227,25 +248,27 @@ if (DEMO_MODE) {
 
 // 🎯 MAIN GENERATE ENDPOINT
 app.post('/generate', async (req, res) => {
-  const { prompt, mode, selectedActions = {} } = req.body;
+  const { prompt, mode, selectedActions = {}, forceDemo = false } = req.body;
 
   // Input validation
   if (!prompt || typeof prompt !== 'string') {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'Prompt is required and must be a string'
     });
+    return;
   }
 
-  if (DEMO_MODE) {
+  if (DEMO_MODE || forceDemo) {
     // 🎭 DEMO MODE - Return mock responses
-    console.log(`🎭 Demo request: "${prompt.substring(0, 100)}..."`);
+    console.log(`🎭 Demo request: "${prompt.substring(0, 100)}..."${forceDemo ? ' (forced)' : ''}`);
     
     // Simulate some processing time
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
     
     const mockResponse = generateMockResponse(prompt, mode);
-    return res.json(mockResponse);
+    res.json(mockResponse);
+    return;
   }
 
   // 🚀 PRODUCTION MODE - Real API calls
@@ -327,7 +350,7 @@ app.get('/thank-you', (req, res) => {
 });
 
 // 🚫 404 handler
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'Endpoint not found',
