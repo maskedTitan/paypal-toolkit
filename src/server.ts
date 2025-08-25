@@ -180,10 +180,13 @@ app.use('/generate', protect);
 
 // 🚀 HEALTH/INFO ENDPOINT
 app.get('/health', (req, res) => {
+  const isLockedDemo = process.env.VERCEL === '1' && process.env.DEMO_MODE === 'true';
+  
   res.json({
     success: true,
     status: 'healthy',
     mode: DEMO_MODE ? 'demo' : 'production',
+    isLockedDemo, // Add this flag for frontend
     timestamp: new Date().toISOString(),
     ...(DEMO_MODE && {
       demoInfo: {
@@ -198,7 +201,8 @@ app.get('/health', (req, res) => {
 // 🔄 MODE TOGGLE ENDPOINT (disabled in production demo deployments)
 app.post('/toggle-mode', (req, res) => {
   // Security: Disable toggle in production demo deployments
-  if (process.env.NODE_ENV === 'production' && process.env.DEMO_MODE === 'true') {
+  const isLockedDemo = process.env.VERCEL === '1' && process.env.DEMO_MODE === 'true';
+  if (isLockedDemo) {
     res.status(403).json({
       success: false,
       message: 'Mode switching is disabled in demo deployments for security reasons'
