@@ -88,9 +88,10 @@ const generateMockResponse = (prompt: string, mode: string): any => {
     rawResponse: mockResponse,
     demoInfo: DEMO_MODE ? {
       message: 'This is a simulated response for demonstration purposes',
-      realSetup: 'https://github.com/your-repo/setup-guide',
-      paypalDocs: 'https://developer.paypal.com/docs/',
-      openaiDocs: 'https://platform.openai.com/docs/'
+      paypalAiDocs: 'https://www.paypal.ai/docs/tools/agent-toolkit-quickstart',
+      paypalDeveloperDocs: 'https://developer.paypal.com/docs/',
+      openaiDocs: 'https://platform.openai.com/docs/',
+      realSetup: 'https://github.com/your-repo/setup-guide'
     } : undefined
   };
 };
