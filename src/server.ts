@@ -73,7 +73,7 @@ const generateMockResponse = (prompt: string, mode: string): any => {
 
 🎭 **This is a DEMO response** - To complete real purchases, please visit [PayPal Demo Payment Link](https://www.sandbox.paypal.com/checkoutnow?token=${mockOrderId}).
 
-💡 **Want real integration?** [Set up your own instance](https://github.com/your-repo/setup-guide) with your PayPal and OpenAI credentials.`;
+💡 **Want real integration?** [Set up your own instance](https://github.com/maskedTitan/paypal-toolkit) with your PayPal and OpenAI credentials.`;
 
   return {
     success: true,
@@ -91,7 +91,7 @@ const generateMockResponse = (prompt: string, mode: string): any => {
       paypalAiDocs: 'https://www.paypal.ai/docs/tools/agent-toolkit-quickstart',
       paypalDeveloperDocs: 'https://developer.paypal.com/docs/',
       openaiDocs: 'https://platform.openai.com/docs/',
-      realSetup: 'https://github.com/your-repo/setup-guide'
+      realSetup: 'https://github.com/maskedTitan/paypal-toolkit'
     } : undefined
   };
 };
@@ -195,7 +195,7 @@ app.get('/health', (req, res) => {
       demoInfo: {
         message: 'This is a demo environment with mock responses',
         authentication: 'None required for demo',
-        setupGuide: 'https://github.com/your-repo/setup-guide'
+        setupGuide: 'https://github.com/maskedTitan/paypal-toolkit'
       }
     })
   });
@@ -249,8 +249,8 @@ if (DEMO_MODE) {
         'Limited to basic scenarios'
       ],
       buildYourOwn: {
-        repository: 'https://github.com/your-repo/paypal-ai-toolkit',
-        setupGuide: 'https://github.com/your-repo/setup-guide',
+        repository: 'https://github.com/maskedTitan/paypal-toolkit',
+        setupGuide: 'https://github.com/maskedTitan/paypal-toolkit',
         requirements: [
           'PayPal Developer Account',
           'OpenAI API Key',
