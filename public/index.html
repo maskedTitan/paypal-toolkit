@@ -8,7 +8,58 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-8">
     <div class="bg-white rounded-2xl shadow-xl p-8 max-w-4xl w-full space-y-6">
-        <h1 class="text-3xl font-bold text-center text-blue-600">PayPal Agent AI Demo</h1>  
+        <!-- Demo Mode Banner (hidden by default, shown via JS) -->
+        <div id="demoBanner" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">🎭</span>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm">
+                <strong>Demo Mode Active:</strong> This instance uses mock responses for demonstration. 
+                No real PayPal API calls are made.
+                <a href="/demo-info" class="underline ml-2">Learn more</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Locked Demo Banner (for branch deployments) -->
+        <div id="lockedDemoBanner" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">🔒</span>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm">
+                <strong>Permanent Demo Environment:</strong> This deployment is locked in demo mode for security. 
+                Only mock responses are returned - perfect for testing and documentation.
+                <a href="/demo-info" class="underline ml-2">Learn more</a>
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-between items-center">
+          <h1 id="mainTitle" class="text-3xl font-bold text-blue-600">PayPal Agent AI</h1>  
+          
+          <!-- Mode Toggle -->
+          <div class="flex items-center space-x-4 bg-gray-50 px-4 py-2 rounded-lg border">
+            <span class="text-sm font-medium text-gray-600">Mode:</span>
+            <div class="flex items-center space-x-3">
+              <span id="productionLabel" class="text-sm font-medium text-gray-900 transition-colors">Production</span>
+              <div class="relative">
+                <input type="checkbox" id="modeToggle" class="sr-only">
+                <label for="modeToggle" class="flex items-center cursor-pointer">
+                  <div class="relative w-14 h-7 bg-gray-300 rounded-full shadow-inner transition-colors duration-300 ease-in-out">
+                    <div id="toggleSlider" class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-300 ease-in-out"></div>
+                  </div>
+                </label>
+              </div>
+              <span id="demoLabel" class="text-sm font-medium text-gray-400 transition-colors">Demo</span>
+            </div>
+          </div>
+        </div>
         
         <div class="space-y-6">
           <h2 class="text-xl font-bold text-gray-800">Select Actions to Allow</h2>
@@ -105,6 +156,104 @@
       </div>
 
   <script>
+    let currentMode = 'production'; // Track current mode
+
+    // Check for demo mode on page load
+    async function checkDemoMode() {
+      try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        currentMode = data.mode;
+        updateUI(currentMode);
+        
+        // Show appropriate banner and hide toggle for locked demos
+        if (data.isLockedDemo && data.branch === 'demo-v1') {
+          // Show locked demo banner for branch deployments
+          document.getElementById('lockedDemoBanner').classList.remove('hidden');
+          const toggleContainer = document.querySelector('.flex.items-center.space-x-4.bg-gray-50');
+          if (toggleContainer) {
+            toggleContainer.style.display = 'none';
+          }
+        } else if (data.mode === 'demo') {
+          // Show regular demo banner for toggleable demos
+          document.getElementById('demoBanner').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.log('Could not check demo mode status');
+      }
+    }
+
+    // Update UI based on mode
+    function updateUI(mode) {
+      const mainTitle = document.getElementById('mainTitle');
+      const demoBanner = document.getElementById('demoBanner');
+      const modeToggle = document.getElementById('modeToggle');
+      const toggleSlider = document.getElementById('toggleSlider');
+      const toggleTrack = toggleSlider.parentElement;
+      const productionLabel = document.getElementById('productionLabel');
+      const demoLabel = document.getElementById('demoLabel');
+
+      if (mode === 'demo') {
+        mainTitle.innerHTML = 'PayPal Agent AI <span class="text-green-500 text-xl">Demo</span>';
+        demoBanner.classList.remove('hidden');
+        modeToggle.checked = true;
+        toggleSlider.classList.add('translate-x-7');
+        toggleTrack.classList.add('bg-green-400');
+        toggleTrack.classList.remove('bg-gray-300');
+        productionLabel.classList.add('text-gray-400');
+        productionLabel.classList.remove('text-gray-900');
+        demoLabel.classList.add('text-green-600', 'font-semibold');
+        demoLabel.classList.remove('text-gray-400');
+      } else {
+        mainTitle.innerHTML = 'PayPal Agent AI <span class="text-gray-500 text-xl">Production</span>';
+        demoBanner.classList.add('hidden');
+        modeToggle.checked = false;
+        toggleSlider.classList.remove('translate-x-7');
+        toggleTrack.classList.remove('bg-green-400');
+        toggleTrack.classList.add('bg-gray-300');
+        productionLabel.classList.remove('text-gray-400');
+        productionLabel.classList.add('text-gray-900');
+        demoLabel.classList.remove('text-green-600', 'font-semibold');
+        demoLabel.classList.add('text-gray-400');
+      }
+    }
+
+    // Toggle mode function
+    async function toggleMode() {
+      const newMode = currentMode === 'demo' ? 'production' : 'demo';
+      
+      try {
+        const response = await fetch('/toggle-mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: newMode })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          currentMode = data.mode;
+          updateUI(currentMode);
+          console.log(data.message);
+        } else {
+          console.error('Failed to toggle mode:', data.message);
+          // Revert toggle if failed
+          updateUI(currentMode);
+        }
+      } catch (error) {
+        console.error('Error toggling mode:', error);
+        // Revert toggle if failed
+        updateUI(currentMode);
+      }
+    }
+
+    // Call on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkDemoMode();
+      
+      // Add toggle event listener
+      document.getElementById('modeToggle').addEventListener('change', toggleMode);
+    });
+
     function syntaxHighlight(json) {
       if (typeof json != 'string') {
         json = JSON.stringify(json, undefined, 2);
